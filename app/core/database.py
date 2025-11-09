@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
-from models.tasks import Base
+from models.employees import Base
 
 engine = create_async_engine('sqlite+aiosqlite:///task.db')
 

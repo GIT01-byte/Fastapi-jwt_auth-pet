@@ -11,6 +11,6 @@ class EmployeesOrm(Base):
     
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
-    last_name Mapped[str]
-    phone Mapped[int]
-    image_url Mapped[str]
+    last_name: Mapped[str]
+    phone: Mapped[int]
+    image_url: Mapped[str]

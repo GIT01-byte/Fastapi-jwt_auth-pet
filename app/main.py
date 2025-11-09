@@ -10,9 +10,9 @@ from core.database import create_table, delete_table
 async def lifespan(app: FastAPI):
     await delete_table()
     await create_table()
-    print('База перезапущена...')
+    print('[INFO]    База перезапущена...')
     yield
-    print('Выключение')
+    print('[INFO]    Выключение')
 
 app = FastAPI(lifespan=lifespan)
 
