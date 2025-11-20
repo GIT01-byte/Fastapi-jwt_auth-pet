@@ -1,9 +1,12 @@
 import os
+from pathlib import Path
+
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
 
 # Определяем путь к директории для ключей
-KEY_DIR = "./app/auth/certs"
+BASE_DIR = Path(__file__).parent.parent
+KEY_DIR = f"{BASE_DIR}/certs"
 
 # 0. Проверка и создание директории, если её нет
 if not os.path.exists(KEY_DIR):
