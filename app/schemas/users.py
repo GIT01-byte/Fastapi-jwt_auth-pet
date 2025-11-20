@@ -1,11 +1,14 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 
 class UserScheme(BaseModel):
+    model_config = ConfigDict(strict=True)
     username: str
-    password: str
+    password: bytes
+    email: EmailStr | None = None
+    is_active: bool = True
 
 
-class UserLoginSchema(BaseModel):
-    username: str
-    password: str
+class TokenInfo(BaseModel):
+    access_token: str
+    token_type: str
