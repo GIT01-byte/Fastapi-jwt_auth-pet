@@ -13,7 +13,6 @@
 1.  Клонируйте репозиторий:
     ```bash
     git clone https://github.com/GIT01-byte/Fastapi-auth_test_task
-    cd "fastapi-auth-test-task"
     ```
     
 2.  Установите зависимости:
