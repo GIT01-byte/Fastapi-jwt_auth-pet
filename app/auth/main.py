@@ -3,6 +3,9 @@ from fastapi import FastAPI
 
 from fastapi.middleware.cors import CORSMiddleware
 
+from models.user_admin import setup_admin
+
+from db.database import async_engine
 from db.user_repository import UsersRepo
 
 from api.api import api_routers
@@ -10,7 +13,7 @@ from api.api import api_routers
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await AsyncOrm.create_tables() 
+    await UsersRepo.create_tables() 
     print('INFO:     База перезапущена')
     yield
     print('INFO:     Выключение...')
@@ -25,6 +28,8 @@ app.add_middleware(
 )
 
 app.include_router(api_routers)
+
+setup_admin(app, async_engine)
 
 
 if __name__ == '__main__':

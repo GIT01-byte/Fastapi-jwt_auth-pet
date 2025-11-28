@@ -1,11 +1,14 @@
 from fastapi import FastAPI
+
+from sqladmin import Admin, ModelView
+
 from models.users import UsersOrm
 
 
 class UserAdminView(ModelView, model = UsersOrm):
     can_create = True
-    column_list = ('id', 'link', 'timestamp')
-    form_columns = ('id', 'link', 'timestamp')
+    column_list = ('id', 'username' 'email', 'avatar_links')
+    form_columns = ('id', 'username' 'email', 'avatar_links')
 
 
 def setup_admin(app: FastAPI, engine):
