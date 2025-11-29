@@ -1,6 +1,6 @@
 from typing import Any
 
-from app.auth.schemas.users import UserInDB
+from schemas.users import UserInDB
 
 from services.jwt_tokens import (
     create_access_token,

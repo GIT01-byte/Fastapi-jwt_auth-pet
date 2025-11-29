@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from app.auth.services.jwt_tokens import create_access_token
+from services.jwt_tokens import create_access_token
 
 from exceptions.exceptions import (
     InvalidCredentialsError,
