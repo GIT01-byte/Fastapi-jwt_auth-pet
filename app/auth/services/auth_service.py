@@ -1,5 +1,5 @@
 from fastapi import Response
-from fastapi.responses import JSONResponse 
+from fastapi.requests import Request 
 
 from schemas.users import UserInDB
 
@@ -13,14 +13,16 @@ from services.jwt_tokens import (
     )
 
 from exceptions.exceptions import (
+    CookieMissingTokenError,
     UserNotFoundError,
     InvalidPasswordError,
     UserInactiveError,
     )
 
-from utils.security import check_password
+from utils.security import check_password, decode_jwt
 from db.user_repository import UsersRepo
 
+from deps.auth_deps import get_current_auth_user_for_refresh
 
 async def authenticate_user(
     username: str,
@@ -83,10 +85,59 @@ async def authenticate_user(
     return response # Возвращаем готовый Response
 
 
-def logout_user(response: JSONResponse) -> JSONResponse:
+def refresh_user_tokens(refresh_token: str) -> Response:
+    if refresh_token:
+        # Извлекаем из refresh токена user id и еще проверяем токен на свежесть при помощи декодирования
+        refresh_payload = decode_jwt(token=refresh_token)
+        user_id = str(refresh_payload.get('sub'))
+        # Создаем Response
+        response = Response(
+            content="{message: 'refresh access token succesfully'}",
+            status_code=200,
+            media_type="application/json",
+        )
+
+        # Удаляем куки старых токенов
+        response.delete_cookie(ACCESS_TOKEN_TYPE)
+        response.delete_cookie(REFRESH_TOKEN_TYPE)
+
+        # Генерируем новые токены
+        new_access_token = create_access_token(user_id)
+        new_refresh_token = create_refresh_token(user_id)
+
+        # Устанавливаем куки с новыми токенами
+        response.set_cookie(
+            key=ACCESS_TOKEN_TYPE,
+            value=new_access_token,
+            httponly=True,          # Доступно только через HTTP
+            secure=True,            # Только по HTTPS (важно для продакшена)
+            samesite="lax",         # Защита от CSRF
+            max_age=60 * settings.jwt_auth.access_token_expire_minutes # Время жизни куки
+        )
+        response.set_cookie(
+            key=REFRESH_TOKEN_TYPE,
+            value=new_refresh_token,
+            httponly=True,          # Доступно только через HTTP
+            secure=True,            # Только по HTTPS (важно для продакшена)
+            samesite="lax",         # Защита от CSRF
+            max_age=60 * settings.jwt_auth.access_token_expire_minutes # Время жизни куки
+        )
+
+        return response # Возвращаем готовый Response
+    else:
+        raise CookieMissingTokenError(detail='refresh token reqired in cookie')
+
+
+def logout_user() -> Response:
+    # Создаем Response
+    response = Response(
+        content="{message: 'logout succesfully'}", # Тело ответа - статус выхода пользователя
+        status_code=200,
+        media_type="application/json",
+    )   
+
     # Удаляем куки токенов
     response.delete_cookie(ACCESS_TOKEN_TYPE)
     response.delete_cookie(REFRESH_TOKEN_TYPE)
-    
-    # Возвращаем статус и дополнительное сообщение для отладки
-    return JSONResponse(content={"message": "Logout successful"}, status_code=200)
+
+    return response # Возвращаем готовый Response

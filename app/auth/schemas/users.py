@@ -37,6 +37,3 @@ class RegisterRequest(BaseModel):
     email: Optional[EmailStr] = Field(...)
     profile: Optional[dict[str, Any]] = None
     password: str = Field(..., min_length=8)
-
-class LogoutRequest(BaseModel):
-    pass

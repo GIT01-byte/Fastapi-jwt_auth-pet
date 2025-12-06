@@ -103,7 +103,6 @@ def get_current_token_payload(
         payload: dict[str, Any] = decode_jwt(
             token=tokens['access_token'],
         )
-        print(f"Decoded JWT Payload: {payload}")
     except InvalidTokenError as e:
         # TODO: Добавить логирование
         raise HTTPException(

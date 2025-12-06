@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.responses import JSONResponse
 
 from services.jwt_tokens import create_access_token
@@ -14,7 +14,7 @@ from schemas.users import (
     UserInDB,
     )
 
-from services.auth_service import authenticate_user, logout_user
+from services.auth_service import authenticate_user, logout_user, refresh_user_tokens
 
 from deps.auth_deps import (
     get_tokens_by_cookie,
@@ -61,18 +61,18 @@ async def login_user(
 #     )
 
 
-# @router.post(
-#     '/refresh/',
-#     response_model=TokenResponse,
-#     response_model_exclude_none=True,
-#     )
-# async def auth_refresh_jwt(
-#     user: UserInDB = Depends(get_current_auth_user_for_refresh)
-# ):
-#     access_token = create_access_token(user.id)
-#     return TokenResponse(
-#         access_token=access_token,
-#     )
+@router.post('/refresh/')
+async def auth_refresh_jwt(
+    tokens: dict = Depends(get_tokens_by_cookie),
+):
+    refresh_token = tokens['refresh_token']
+    user = refresh_user_tokens(refresh_token)
+    if not user:
+        raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail='Result of function: refresh_user_tokens is not realize'
+        )
+    return user
 
 
 @router.get('/me/')
@@ -89,10 +89,8 @@ async def auth_user_check_self_info(
 
 
 @router.post("/logout/")
-async def logout(
-    response: JSONResponse,
-    ):
-    result = logout_user(response)
+async def logout():
+    result = logout_user()
     return result
 
 
@@ -103,6 +101,6 @@ async def get_cookie(
     if result:
         return result
     raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail='Результат функции: get_tokens_by_cookie не найден'
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail='Result of function: get_tokens_by_cookie is not realize',
     )
