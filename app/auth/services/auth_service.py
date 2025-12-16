@@ -27,7 +27,7 @@ async def register_user_to_db(payload: dict, password: str) -> str:  # FIXME exc
         return new_username
     raise UserAlreadyExistsError()
 
-
+# TODO fix to redis blacklist
 def logout_user() -> Response:
     try:
         # Удаляем куки токенов

@@ -51,7 +51,7 @@ class Settings(BaseSettings):
     redis: RedisSettings
 
 
-settings = Settings()
+settings = Settings() # type: ignore
 
 print(f"DB Host: {settings.db.host}")
 print(f"Redis URL: {settings.redis.REDIS_URL}")

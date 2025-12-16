@@ -2,7 +2,7 @@ from typing import Optional
 from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 
-from models.users import Users
+from models.users import User
 from db.database import Base, async_session_factory, async_engine
 
 from utils.logging import logger
@@ -16,9 +16,9 @@ class UsersRepo():
             await conn.run_sync(Base.metadata.create_all)
 
     @staticmethod
-    async def insert_user(payload: dict) -> Optional[Users]:
+    async def insert_user(payload: dict) -> Optional[User]:
         async with async_session_factory() as session:
-            new_user = Users(**payload)
+            new_user = User(**payload)
             session.add(new_user)
 
             try:
@@ -34,22 +34,22 @@ class UsersRepo():
                 return None
 
     @staticmethod
-    async def select_user_by_user_id(user_id: int) -> Users | None:
+    async def select_user_by_user_id(user_id: int) -> User | None:
         async with async_session_factory() as session:
             query = (
-                select(Users)
-                .where(Users.id == user_id)
+                select(User)
+                .where(User.id == user_id)
             )
             result = await session.execute(query)
             user = result.scalars().first()
             return user
 
     @staticmethod
-    async def select_user_by_login(username: str) -> Users | None:
+    async def select_user_by_login(username: str) -> User | None:
         async with async_session_factory() as session:
             query = (
-                select(Users)
-                .where(Users.username == username)
+                select(User)
+                .where(User.username == username)
             )
             result = await session.execute(query)
             user = result.scalars().first()
