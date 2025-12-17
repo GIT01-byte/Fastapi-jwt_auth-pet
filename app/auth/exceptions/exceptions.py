@@ -37,7 +37,7 @@ class InvalidTokenPayload(BaseAPIException):
         super().__init__(detail=detail, status_code=status.HTTP_401_UNAUTHORIZED)
 
 
-class MalformedTokenError(BaseAPIException):
+class InvalidTokenError(BaseAPIException):
     def __init__(self, detail: str = "Invalid or malformed token"):
         super().__init__(detail=detail, status_code=status.HTTP_401_UNAUTHORIZED)
 

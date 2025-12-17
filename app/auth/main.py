@@ -10,10 +10,16 @@ from api.api import api_routers
 
 from utils.logging import logger
 
+import tracemalloc
+
+# Включаем отслеживание памяти
+tracemalloc.start()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info('Запуск приложения...')
+    await UsersRepo.create_tables()
     logger.debug('База перезапущена')
     yield
     logger.info('Выключение...')

@@ -1,56 +1,35 @@
+import secrets
 from typing import Any
-import bcrypt
-
 from datetime import timedelta, datetime, timezone
 
 import jwt
+import bcrypt
+import hashlib
 
 from config import settings
 
 
 TOKEN_TYPE_FIELD = 'type'
-ACCESS_TOKEN_TYPE = 'access_token'
-REFRESH_TOKEN_TYPE = 'refresh_token'
+ACCESS_TOKEN_TYPE = 'access'
+REFRESH_TOKEN_TYPE = 'refresh'
 
 
-def create_jwt(
-    token_type: str,
-    token_data: dict,
-    expire_minutes: int = settings.jwt.access_token_expire_minutes,
-    expire_timedelta: timedelta | None = None,
-) -> str:
+def create_access_token(user_id: int) -> str:
+    jti = secrets.token_urlsafe(16)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.jwt.access_token_expire_minutes)
     jwt_payload = {
-        TOKEN_TYPE_FIELD: token_type,
+        'sub': str(user_id),
+        'exp': expire,
+        'jti': jti,
     }
-    jwt_payload.update(token_data)
-    return encode_jwt(
-        payload=jwt_payload,
-        expire_minutes=expire_minutes,
-        expire_timedelta=expire_timedelta,
-    )
+    return encode_jwt(payload=jwt_payload)
 
 
-def create_access_token(user_id: str) -> str:
-    jwt_payload = {
-        'sub': user_id,
-    }
-    return create_jwt(
-        token_type=ACCESS_TOKEN_TYPE,
-        token_data=jwt_payload,
-        expire_minutes=settings.jwt.access_token_expire_minutes,
-    )
-
-
-def create_refresh_token(user_id: str) -> str:
-    jwt_payload = {
-        'sub': user_id,
-    }
-    return create_jwt(
-        token_type=REFRESH_TOKEN_TYPE,
-        token_data=jwt_payload,
-        expire_timedelta=timedelta(
-            days=settings.jwt.refresh_token_expire_days),
-    )
+def create_refresh_token() -> tuple[str, str]:
+    """Возвращает (token, token_hash)"""
+    token = secrets.token_urlsafe(64)
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    return token, token_hash
 
 
 def hash_password(

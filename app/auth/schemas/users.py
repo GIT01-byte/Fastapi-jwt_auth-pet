@@ -1,5 +1,6 @@
 from typing import Any, List, Optional
 
+from fastapi import Form
 from pydantic import BaseModel, EmailStr, Field
 
 
@@ -15,8 +16,8 @@ class UserInDB(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    login: str = Field(...)
-    password: str = Field(...)
+    login: str = Form()
+    password: str = Form()
 
 
 class TokenResponse(BaseModel):
