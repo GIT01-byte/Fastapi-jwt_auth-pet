@@ -1,10 +1,12 @@
-from typing import Any
+from typing import Annotated, Any
 
 from fastapi import Depends, Request, Response
 
 from fastapi.security import HTTPBearer, OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError as JWTInvalidTokenError
 
+from db.db_manager import db_manager
+from sqlalchemy.ext.asyncio import AsyncSession
 from app_redis.client import get_redis_client
 from exceptions.exceptions import (
     CookieMissingTokenError,
@@ -19,6 +21,8 @@ from utils.security import (
 )
 
 from utils.logging import logger
+
+SessionDep = Annotated[AsyncSession, Depends(db_manager.session_getter)]
 
 
 http_bearer = HTTPBearer(auto_error=False)

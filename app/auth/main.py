@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from models.user_admin import setup_admin
 from db.db_manager import db_manager
 from models.base import Base
-from api.api import api_routers
+from api import api_routers
 
 from utils.logging import logger
 
@@ -19,15 +19,7 @@ tracemalloc.start()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info('Запуск приложения...')
-
-    async with db_manager.engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-        # await conn.run_sync(Base.metadata.create_all)
-        print(Base.metadata.tables.keys())
-    print("Database is droped")
-
     yield
-
     logger.info('Выключение...')
 
 app = FastAPI(lifespan=lifespan)

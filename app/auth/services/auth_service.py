@@ -3,7 +3,7 @@ from fastapi import Depends, Response
 from fastapi.responses import JSONResponse
 from jwt.exceptions import InvalidTokenError as JWTInvalidTokenError
 
-from db.user_repository import RefresTokensRepo
+from app.auth.db.users_repository import RefreshTokensRepo
 from config import settings
 from schemas.users import UserInDB
 from app_redis.client import get_redis_client
@@ -23,8 +23,13 @@ from utils.security import (
     create_refresh_token as gen_refresh_token,
     hash_password,
 )
-from db.user_repository import UsersRepo
-from deps.auth_deps import get_current_token_payload, oauth2_scheme, set_tokens_cookie
+from app.auth.db.users_repository import UsersRepo
+from deps.auth_deps import (
+    SessionDep, 
+    get_current_token_payload, 
+    oauth2_scheme, 
+    set_tokens_cookie,
+)
 
 from utils.logging import logger
 
@@ -39,13 +44,13 @@ async def authenticate_user(
     # Проверяем полученного user'а
     if not user_data_from_db:
         raise UserNotFoundError()
-    
+
     if not check_password(
         password=password,
         hashed_password=user_data_from_db.hashed_password
-        ):
+    ):
         raise InvalidPasswordError()
-    
+
     if not user_data_from_db.is_active:
         raise UserInactiveError()
 
@@ -64,8 +69,9 @@ async def authenticate_user(
     refresh_token, refresh_hash = gen_refresh_token()
 
     # Создаем refresh токен
-    expires_at = datetime.now(timezone.utc) + timedelta(minutes=settings.jwt.refresh_token_expire_days)
-    await RefresTokensRepo.create_refresh_token(user_id, refresh_hash, expires_at)
+    expires_at = datetime.now(
+        timezone.utc) + timedelta(minutes=settings.jwt.refresh_token_expire_days)
+    await RefreshTokensRepo.create_refresh_token(user_id, refresh_hash, expires_at)
 
     # Устанавливаем куки
     set_tokens_cookie(
@@ -73,13 +79,13 @@ async def authenticate_user(
         value=access_token,
         max_age=settings.jwt.access_token_expire_minutes,
         response=response,
-        )
+    )
     set_tokens_cookie(
         key=REFRESH_TOKEN_TYPE,
         value=refresh_token,
         max_age=settings.jwt.refresh_token_expire_days,
         response=response,
-        )
+    )
     return {
         "user": user.username,
         "access_token": access_token,

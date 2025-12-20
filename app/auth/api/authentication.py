@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Form, Response
 
-from db.user_repository import UsersRepo
+from db.users_repository import UsersRepo
 from config import settings
 from app_redis.client import get_redis_client
 from utils.security import create_access_token, create_refresh_token
@@ -10,6 +10,7 @@ from exceptions.exceptions import (
     PasswordRequiredError,
     RegistrationFailedError,
     UserAlreadyExistsError,
+    UserNotFoundError,
 )
 from schemas.users import (
     LoginRequest,
@@ -22,6 +23,7 @@ from services.auth_service import (
     register_user_to_db
 )
 from deps.auth_deps import (
+    SessionDep,
     get_current_token_payload,
     get_current_user,
     http_bearer,
@@ -41,6 +43,7 @@ auth = APIRouter(
 )
 auth_usage = APIRouter()
 dev_usage = APIRouter()
+
 
 # TODO refresh_hash insert db
 @auth.post('/login/')
@@ -133,9 +136,11 @@ async def auth_user_check_self_info(
     current_user: dict = Depends(get_current_user),
 ):
     user = await UsersRepo.select_user_by_user_id(current_user['user_id'])
-    iat = payload.get('iat')
-    return {
-        'username': user.username,
-        'email': user.email,
-        'logged_in_at': iat,
-    }
+    if user:
+        iat = payload.get('iat')
+        return {
+            'username': user.username,
+            'email': user.email,
+            'logged_in_at': iat,
+        }
+    raise UserNotFoundError()
