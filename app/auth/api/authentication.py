@@ -25,7 +25,6 @@ from services.auth_service import (
 from deps.auth_deps import (
     clear_cookie_with_tokens,
     get_current_active_user,
-    http_bearer,
 )
 from utils.security import decode_access_token
 from config import settings
@@ -35,9 +34,7 @@ from utils.logging import logger
 # TODO fix unauthorized errors (based on invalid types)
 # INFO:     127.0.0.1:53955 - "POST /users/refresh/ HTTP/1.1" 401 Unauthorized
 
-auth = APIRouter(
-    dependencies=[Depends(http_bearer)],
-)
+auth = APIRouter()
 auth_usage = APIRouter()
 dev_usage = APIRouter()
 

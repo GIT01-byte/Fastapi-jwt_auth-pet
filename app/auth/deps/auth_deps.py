@@ -7,7 +7,7 @@ from uuid import UUID
 from redis import Redis
 from jwt import PyJWTError
 
-from app.auth.app_redis.client import get_redis_client
+from app_redis.client import get_redis_client
 from db.users_repository import UsersRepo
 from schemas.users import UserInDB
 from utils.security import (
@@ -25,8 +25,6 @@ from exceptions.exceptions import (
 )
 from utils.logging import logger
 from config import settings
-
-SessionDep = AsyncSession
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login/")
 
@@ -135,7 +133,7 @@ async def get_current_user(
         raise InvalidTokenError()
 
 
-async def get_current_active_user(current_user: UserInDB = Depends(get_current_user)):
+async def get_current_active_user(current_user: dict = Depends(get_current_user)):
     """
     Возвращает активного пользователя.
 
@@ -143,6 +141,7 @@ async def get_current_active_user(current_user: UserInDB = Depends(get_current_u
     :raises UserInactiveError: Если пользователь неактивен
     :return: Активный пользователь
     """
-    if not current_user.is_active:
-        raise UserInactiveError()
-    return current_user
+    if current_user['is_active'] == True:
+        return current_user
+    raise UserInactiveError()
+

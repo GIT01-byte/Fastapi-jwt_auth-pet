@@ -24,7 +24,6 @@ from utils.security import (
     hash_password,
 )
 from deps.auth_deps import (
-    SessionDep, 
     oauth2_scheme, 
     set_tokens_cookie,
 )
