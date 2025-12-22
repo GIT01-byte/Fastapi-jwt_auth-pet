@@ -112,14 +112,14 @@ async def logout_user(
         access_jti = user["jti"]
         user_id = user["user_id"]
 
-        # 1. Удаляем куки токенов
+        # Удаляем куки токенов
         clear_cookie_with_tokens(response)
 
-        # 2. Черный список access
+        # Черный список access
         ttl = settings.jwt.access_token_expire_minutes * 60
         await redis.setex(f"blacklist:access:{access_jti}", ttl, "1")
 
-        # 3. Инвалидировать все refresh-токены пользователя
+        # Инвалидировать все refresh-токены пользователя
         await RefreshTokensRepo.invalidate_all_refresh_tokens(user_id)
 
         return {"detail": "Successfully logged out"}

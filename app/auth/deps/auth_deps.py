@@ -1,15 +1,11 @@
-from typing import Dict, Union
-from fastapi import Depends, HTTPException, status, Request, Response
+from typing import Dict
+from fastapi import Depends, Request, Response
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.ext.asyncio import AsyncSession
-from datetime import datetime, timedelta, timezone
-from uuid import UUID
 from redis import Redis
 from jwt import PyJWTError
 
 from app_redis.client import get_redis_client
 from db.users_repository import UsersRepo
-from schemas.users import UserInDB
 from utils.security import (
     REFRESH_TOKEN_TYPE,
     ACCESS_TOKEN_TYPE,
@@ -24,7 +20,6 @@ from exceptions.exceptions import (
     UserNotFoundError,
 )
 from utils.logging import logger
-from config import settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login/")
 
@@ -33,7 +28,7 @@ async def get_tokens_by_cookie(request: Request) -> Dict[str, str]:
     """
     Извлекает токены из cookies запроса.
 
-    :param request: Объект запроса FastAPI
+    :param request: Объект Request FastAPI для установки куки
     :return: Словарь с токенами ('access_token', 'refresh_token') или вызывает исключение, если токены отсутствуют
     """
     access_token = request.cookies.get("access_token")
@@ -51,7 +46,7 @@ def clear_cookie_with_tokens(response: Response) -> Response:
     """
     Очищает куки с токенами из ответа.
 
-    :param response: Ответ сервера
+    :param response: Объект Response FastAPI для установки куки
     :return: Модифицированный ответ
     """
     response.delete_cookie(ACCESS_TOKEN_TYPE)
@@ -66,7 +61,7 @@ def set_tokens_cookie(key: str, value: str, max_age: int, response: Response):
     :param key: Имя ключа (обычно 'access_token' или 'refresh_token')
     :param value: Значение токена
     :param max_age: Срок жизни токена в секундах
-    :param response: Ответ сервера
+    :param response: Объект Response FastAPI для установки куки
     :raise SetCookieFailedError: Если установка куки прошла неудачно
     """
     try:
@@ -78,7 +73,8 @@ def set_tokens_cookie(key: str, value: str, max_age: int, response: Response):
             samesite="strict",       # Предотвращение межсайтового отслеживания
             max_age=max_age,         # Продолжительность жизни токена
         )
-        logger.info(f"Куки успешно установлены: {key}: {value[:5]}... ({max_age} секунд)")
+        logger.info(
+            f"Куки успешно установлены: {key}: {value[:5]}... ({max_age} секунд)")
     except Exception as exc:
         logger.error(f"Ошибка установки куки: {exc}")
         raise SetCookieFailedError() from exc
@@ -102,7 +98,7 @@ async def get_current_user(
         payload = decode_access_token(token)
 
         jti: str | None = payload.get("jti")
-        user_id: int | None = int(payload.get("sub")) # type: ignore
+        user_id: int | None = int(payload.get("sub"))  # type: ignore
         iat: int | None = payload.get("iat")
 
         if not user_id or not jti:
@@ -111,7 +107,7 @@ async def get_current_user(
         # Проверка чёрного списка Redis
         if await redis.exists(f"blacklist:access:{jti}"):
             raise TokenRevokedError()
-        
+
         # Запрашиваем пользователя из базы данных
         user = await UsersRepo.select_user_by_user_id(user_id)
 
@@ -144,4 +140,3 @@ async def get_current_active_user(current_user: dict = Depends(get_current_user)
     if current_user['is_active'] == True:
         return current_user
     raise UserInactiveError()
-

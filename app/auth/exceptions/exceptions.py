@@ -21,7 +21,7 @@ class DataConflictError(BaseAPIException):
 # --- Базовые исключения API ---
 # Исключения кук
 class CookieMissingTokenError(BaseAPIException):
-    def __init__(self, detail: str = "Missing required cookies."):
+    def __init__(self, detail: str = "Missing required cookies"):
         super().__init__(detail=detail, status_code=status.HTTP_401_UNAUTHORIZED)
 
 
@@ -106,4 +106,15 @@ class LogoutUserFailedError(BaseAPIException):
 
 class ValidateAuthUserFailedError(BaseAPIException):
     def __init__(self, detail: str = "validate auth user failed due to interanal error"):
+        super().__init__(detail=detail, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class RevokeTokenFailedError(BaseAPIException):
+    def __init__(self, detail: str = "Failed to revoke token due to internal error"):
+        super().__init__(detail=detail, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# Исключения redis
+class RedisConnectionError(BaseAPIException):
+    def __init__(self, detail: str = "Failed to connect to Redis due to internal error"):
         super().__init__(detail=detail, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
