@@ -39,7 +39,7 @@ auth_usage = APIRouter()
 dev_usage = APIRouter()
 
 
-# TODO refresh_hash insert db
+
 @auth.post('/login/', response_model=TokenResponse)
 async def login(
     response: Response,

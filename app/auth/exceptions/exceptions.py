@@ -1,12 +1,31 @@
 from fastapi import status
-from .base import BaseAPIException
+from .base import BaseAPIException, RepositoryError
 
 
+# --- Базовые исключения Репозитория ---
+class RepositoryInternalError(RepositoryError):
+    def __init__(self, detail: str = "Database operation failed"):
+        super().__init__(detail=detail)
+
+
+class EntityNotFoundError(BaseAPIException):
+    def __init__(self, detail: str = "Entity not found"):
+        super().__init__(detail=detail, status_code=status.HTTP_404_NOT_FOUND)
+
+
+class DataConflictError(BaseAPIException):
+    def __init__(self, detail: str = "Data conflict occurred"):
+        super().__init__(detail=detail, status_code=status.HTTP_409_CONFLICT)
+
+
+# --- Базовые исключения API ---
+# Исключения кук
 class CookieMissingTokenError(BaseAPIException):
     def __init__(self, detail: str = "Missing required cookies."):
         super().__init__(detail=detail, status_code=status.HTTP_401_UNAUTHORIZED)
 
 
+# Исключения реквизитов для входа
 class InvalidCredentialsError(BaseAPIException):
     def __init__(self, detail: str = "Invalid credentials"):
         super().__init__(detail=detail, status_code=status.HTTP_401_UNAUTHORIZED)
@@ -22,6 +41,7 @@ class InvalidPasswordError(BaseAPIException):
         super().__init__(detail=detail, status_code=status.HTTP_401_UNAUTHORIZED)
 
 
+# Исключения токенов
 class TokenExpiredError(BaseAPIException):
     def __init__(self, detail: str = "Token has expired"):
         super().__init__(detail=detail, status_code=status.HTTP_401_UNAUTHORIZED)
@@ -47,14 +67,15 @@ class UserInactiveError(BaseAPIException):
         super().__init__(detail=detail, status_code=status.HTTP_403_FORBIDDEN)
 
 
-class UserNotFoundError(BaseAPIException):
+# Исключения обработчиков данных пользователей
+class UserNotFoundError(EntityNotFoundError):
     def __init__(self, detail: str = "User not found"):
-        super().__init__(detail=detail, status_code=status.HTTP_404_NOT_FOUND)
+        super().__init__(detail=detail)
 
 
-class UserAlreadyExistsError(BaseAPIException):
+class UserAlreadyExistsError(DataConflictError):
     def __init__(self, detail: str = "User with this username or email already exists"):
-        super().__init__(detail=detail, status_code=status.HTTP_409_CONFLICT)
+        super().__init__(detail=detail)
 
 
 class UserAlreadyLoggedgError(BaseAPIException):
@@ -62,6 +83,7 @@ class UserAlreadyLoggedgError(BaseAPIException):
         super().__init__(detail=detail, status_code=status.HTTP_409_CONFLICT)
 
 
+# Исключения сервисов о проваленной работе
 class RegistrationFailedError(BaseAPIException):
     def __init__(self, detail: str = "Registration failed due to internal error"):
         super().__init__(detail=detail, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)

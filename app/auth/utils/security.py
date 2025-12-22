@@ -31,7 +31,7 @@ def create_access_token(user_id: int) -> str:
         'exp': expire,
         'jti': jti,
     }
-    logger.info(f"Создаем access-токен для пользователя с ID={user_id}, срок действия {expire.isoformat()}")
+    logger.info(f"Создаем access-токен для пользователя с ID={user_id}, срок действия до {expire.isoformat()}")
     return encode_jwt(payload=jwt_payload)
 
 
