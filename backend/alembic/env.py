@@ -11,8 +11,8 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 
-from auth.models import Base
-from backend.auth.settings import settings
+from auth.db.models import Base
+from auth.settings import settings
 print(f'Metadata keys: {Base.metadata.tables.keys()}')
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

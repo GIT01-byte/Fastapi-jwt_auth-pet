@@ -44,4 +44,4 @@ Instrumentator().instrument(app).expose(app)
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(f"{__name__}:app", reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=False, workers=1)

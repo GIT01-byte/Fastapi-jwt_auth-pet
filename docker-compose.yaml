@@ -1,15 +1,53 @@
+# version: '3.8'
+
 services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres-db
+    environment:
+      POSTGRES_DB: ${APP__CONFIG__DB__NAME}
+      POSTGRES_USER: ${APP__CONFIG__DB__USER}
+      POSTGRES_PASSWORD: ${APP__CONFIG__DB__PWD}
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    restart: unless-stopped
+    tty: true
+    stdin_open: true
+
+  redis:
+    image: redis:latest
+    container_name: redis-cache
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --appendfsync everysec
+
+
   promtail:
     image: grafana/promtail:latest
     container_name: promtail
-    ports:
-      - "9080:9080"
     volumes:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./promtail-config.yaml:/etc/promtail/config.yaml
+      - ./promtail-config.yaml:/etc/promtail/config.yaml:ro
     command: -config.file=/etc/promtail/config.yaml
     privileged: true
+    depends_on:
+      - loki
 
   loki:
     image: grafana/loki:latest
@@ -18,6 +56,7 @@ services:
       - "3100:3100"
     volumes:
       - ./loki-config.yaml:/etc/loki/local-config.yaml
+      - loki_data:/loki
 
   prometheus:
     image: prom/prometheus:latest
@@ -26,7 +65,9 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus.yaml:/etc/prometheus/prometheus.yaml
-      - prometheusdata:/prometheus
+      - prometheus_data:/prometheus
+    depends_on:
+      - backend
 
   grafana:
     image: grafana/grafana:latest
@@ -38,18 +79,40 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
       - ./grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
-      - grafanadata:/var/lib/grafana
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - loki
+      - prometheus
 
   backend:
     build: ./backend
     container_name: backend
     ports:
       - "8080:8080"
+    environment:
+      APP__CONFIG__DB__HOST: ${APP__CONFIG__DB__HOST}
+      APP__CONFIG__DB__PORT: ${APP__CONFIG__DB__PORT}
+      APP__CONFIG__DB__NAME: ${APP__CONFIG__DB__NAME}
+      APP__CONFIG__DB__USER: ${APP__CONFIG__DB__USER}
+      APP__CONFIG__DB__PWD: ${APP__CONFIG__DB__PWD}
+
+      APP__CONFIG__REDIS__HOST: ${APP__CONFIG__REDIS__HOST}
+      APP__CONFIG__REDIS__PORT: ${APP__CONFIG__REDIS__PORT}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     logging:
       driver: json-file
       options:
         tag: "{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}"
+    command: ["bash", "-c", "alembic upgrade head && python auth/main.py"]
 
 volumes:
-  grafanadata:
-  prometheusdata:
+  postgres_data:
+    driver: local
+  redis_data:
+  loki_data:
+  prometheus_data:
+  grafana_data:
