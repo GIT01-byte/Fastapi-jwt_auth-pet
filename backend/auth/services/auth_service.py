@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 from fastapi import Response
 
 from core.db.repositories import UsersRepo, RefreshTokensRepo
-from db.core.models.users import User
+from core.models.users import User
 from core.schemas.users import TokenResponse, UserRead
 from core.app_redis.client import get_redis_client
 from exceptions.exceptions import (

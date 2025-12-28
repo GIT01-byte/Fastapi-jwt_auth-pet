@@ -16,7 +16,7 @@ from exceptions.exceptions import (
 )
 
 from core.db.db_manager import db_manager
-from db.core.models.users import RefreshToken, User
+from core.models.users import RefreshToken, User
 
 from utils.logging import logger
 

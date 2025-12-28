@@ -24,7 +24,7 @@ from deps.auth_deps import (
     clear_cookie_with_tokens,
     get_current_active_user,
 )
-from auth.core.settings import settings
+from core.settings import settings
 
 from utils.logging import logger
 
