@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import ORJSONResponse
 
 from core.models.user_admin import setup_admin
 from core.db.db_manager import db_manager
@@ -23,7 +24,10 @@ async def lifespan(app: FastAPI):
     yield
     logger.info('Выключение...')
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    default_response_class=ORJSONResponse,
+    lifespan=lifespan,
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -39,8 +43,8 @@ app.include_router(api_routers)
 # Подключаем prometheus метрики
 Instrumentator().instrument(app).expose(app)
 
-# Подключаем админ панель
-setup_admin(app, db_manager.engine)
+# # Подключаем админ панель
+# setup_admin(app, db_manager.engine)
 
 
 if __name__ == "__main__":
