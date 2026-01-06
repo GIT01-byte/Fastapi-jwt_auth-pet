@@ -110,7 +110,7 @@ curl -X POST "http://localhost:8080/users/login/" \
 
 После успешного запуска сервера доступны следующие инструменты:
 
-### •  Swagger UI (Интерактивная документация): http://localhost:8080/docs
-### •  ReDoc (Альтернативная документация): http://localhost:8080/redoc
-### •  Метрики Prometheus: http://localhost:8080/metrics (если включено)
-### •  Админ-панель: http://localhost:8080/admin (если включено)
+# •  Swagger UI (Интерактивная документация): http://localhost:8080/docs
+# •  ReDoc (Альтернативная документация): http://localhost:8080/redoc
+# •  Метрики Prometheus: http://localhost:8080/metrics (если включено)
+# •  Админ-панель: http://localhost:8080/admin (если включено)
