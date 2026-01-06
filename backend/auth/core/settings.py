@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 BASE_DIR = Path(__file__).parent.parent
-DOTENV_FILE_PATH = BASE_DIR.parent / ".env"
+DOTENV_FILE_PATH = BASE_DIR.parent.parent / ".env"
 
 class JwtAuth(BaseModel):
     model_config = ConfigDict(strict=True)

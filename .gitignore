@@ -202,3 +202,4 @@ Thumbs.db
 # Temp project files
 security_keys/
 logs/
+.test.env

@@ -1,4 +1,5 @@
-from typing import Any, List, Optional
+from datetime import datetime
+from typing import Annotated, Any, List, Optional
 
 from fastapi import Form
 from pydantic import BaseModel, EmailStr, Field
@@ -7,11 +8,18 @@ from pydantic import BaseModel, EmailStr, Field
 class UserRead(BaseModel):
     id: int
     username: str
-    email: EmailStr | None = None
+    email: Annotated[EmailStr, None]
     is_active: bool
 
-    class Config:
-        from_attributes = True
+    model_config = {
+        "from_attributes": True
+    }
+
+
+class JWTPayload(BaseModel):
+    sub: str
+    exp: datetime
+    jti: str
 
 
 class TokenResponse(BaseModel):

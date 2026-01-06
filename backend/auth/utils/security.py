@@ -1,5 +1,5 @@
 import secrets
-from typing import Any
+from typing import Any, Union
 from datetime import timedelta, datetime, timezone
 
 import jwt
@@ -8,6 +8,7 @@ import hashlib
 
 from backend.auth.exceptions.exceptions import InvalidTokenError
 from backend.auth.core.settings import settings
+from backend.auth.core.schemas import JWTPayload
 
 from backend.auth.utils.logging import logger
 
@@ -24,15 +25,17 @@ def create_access_token(user_id: int) -> str:
     :param user_id: Идентификатор пользователя
     :return: Строка с новым access-токеном
     """
-    jti = secrets.token_urlsafe(16)
-    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.jwt.access_token_expire_minutes)
-    jwt_payload = {
-        'sub': str(user_id),
-        'exp': expire,
-        'jti': jti,
-    }
-    logger.info(f"Создаем access-токен для пользователя с ID={user_id}, срок действия до {expire.isoformat()}")
-    return encode_jwt(payload=jwt_payload)
+    if isinstance(user_id, int):
+        jti = secrets.token_urlsafe(16)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.jwt.access_token_expire_minutes)
+        jwt_payload = JWTPayload(
+            sub=str(user_id),
+            exp=expire,
+            jti=jti,
+        )
+        logger.info(f"Создаем access-токен для пользователя с ID={user_id}, срок действия до {expire.isoformat()}")
+        return encode_jwt(payload=jwt_payload)
+    raise TypeError
 
 
 def create_refresh_token() -> tuple[str, str]:
@@ -48,7 +51,9 @@ def create_refresh_token() -> tuple[str, str]:
 
 
 def hash_token(token: str) -> str:
-    return hashlib.sha256(token.encode()).hexdigest()
+    if isinstance(token, str):
+        return hashlib.sha256(token.encode()).hexdigest()
+    raise TypeError
 
 
 def decode_access_token(token: str) -> dict[str, Any]:
@@ -89,13 +94,15 @@ def check_password(password: str, hashed_password: bytes) -> bool:
     :param hashed_password: Хэшированный пароль из базы данных
     :return: True, если пароль совпадает, иначе False
     """
-    result = bcrypt.checkpw(password=password.encode(), hashed_password=hashed_password)
-    logger.debug(f"Результат сравнения паролей: {'совпадает' if result else 'не совпадает'}")
-    return result
+    if isinstance(password, str) and isinstance(hashed_password, bytes):
+        result = bcrypt.checkpw(password=password.encode(), hashed_password=hashed_password)
+        logger.debug(f"Результат сравнения паролей: {'совпадает' if result else 'не совпадает'}")
+        return result
+    raise TypeError
 
 
 def encode_jwt(
-    payload: dict,
+    payload: JWTPayload,
     private_key: str = settings.jwt.private_key_path.read_text(),
     algorithm: str = settings.jwt.algorithm,
     expire_minutes: int = settings.jwt.access_token_expire_minutes,
@@ -111,7 +118,7 @@ def encode_jwt(
     :param expire_timedelta: Альтернативный временной интервал для истечения срока действия
     :return: Закодированный JWT-токен
     """
-    to_encode = payload.copy()
+    to_encode = payload.model_dump()
     now = datetime.now(timezone.utc)
     if expire_timedelta:
         expire = now + expire_timedelta
@@ -119,12 +126,12 @@ def encode_jwt(
         expire = now + timedelta(minutes=expire_minutes)
     to_encode.update(exp=expire, iat=now)
     encoded = jwt.encode(to_encode, private_key, algorithm=algorithm)
-    logger.debug(f"Токен с user_id: {payload['sub']} успешно закодирован.")
+    logger.debug(f"Токен с user_id: {payload.sub} успешно закодирован.")
     return encoded
 
 
 def decode_jwt(
-    token: str | bytes,
+    token: Union[str, bytes],
     public_key: str = settings.jwt.public_key_path.read_text(),
     algorithm: str = settings.jwt.algorithm,
 ) -> dict[str, Any]:
@@ -136,6 +143,8 @@ def decode_jwt(
     :param algorithm: Алгоритм шифрования
     :return: Расшифрованные данные токена
     """
-    decoded = jwt.decode(token, public_key, algorithms=[algorithm])
-    logger.debug(f"Токен успешно декодирован.")
-    return decoded
+    if isinstance(token, (str, bytes)):
+        decoded = jwt.decode(token, public_key, algorithms=[algorithm])
+        logger.debug(f"Токен успешно декодирован.")
+        return decoded
+    raise TypeError
