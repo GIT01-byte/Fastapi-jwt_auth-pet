@@ -7,8 +7,8 @@
 
 
 
-*   Python 3.9+
-*   Docker & Docker Compose — для быстрого развертывания инфраструктуры (PostgreSQL, Redis).
+ - Python 3.9+
+ - Docker & Docker Compose — для быстрого развертывания инфраструктуры (PostgreSQL, Redis).
 
 ## Как запустить:
 
