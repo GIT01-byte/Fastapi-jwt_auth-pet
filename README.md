@@ -1,5 +1,5 @@
 
-# FastAPI-jwt_auth-pet
+# FastAPI-JWT_Auth-pet
 
 ## 🚀 Что это такое?
 Это высокопроизводительный API-сервис аутентификации на базе FastAPI, использующий JWT (EdDSA) для управления сессиями.
@@ -14,8 +14,8 @@
 
 ### 1. Клонируйте репозиторий:
 ```bash
-git clone https://github.com/GIT01-byte/Fastapi-jwt_auth-pet
-cd "Fastapi-jwt_auth-pet"
+git clone https://github.com/GIT01-byte/FastAPI-JWT_Auth-pet
+cd "FastAPI-JWT_Auth-pet"
 ```
 
 ### 2. Настройте переменные окружения:
