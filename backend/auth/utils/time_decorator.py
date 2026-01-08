@@ -1,68 +1,81 @@
+import os
+from pathlib import Path
 import time
 import functools
-import asyncio
 from datetime import datetime
+import contextvars
 
-def async_timed_report(filename="../reports/async_timed_report.txt"):
-    """
-    Декоратор для замера времени выполнения асинхронных функций.
-    Результаты дописываются в указанный файл.
-    """
+# Переменная для хранения уровня вложенности
+indent_var = contextvars.ContextVar("indent", default=0)
+
+# Настройка путей
+base_path = Path(__file__).parent.parent
+full_path_dir = f"{base_path}/reports"
+
+
+def time_all_methods(decorator):
+    """Декоратор класса: применяет указанный декоратор ко всем методам."""
+    def decorate(cls):
+        for attr in cls.__dict__:
+            if callable(getattr(cls, attr)) and not attr.startswith("__"):
+                setattr(cls, attr, decorator(getattr(cls, attr)))
+        return cls
+    return decorate
+
+
+def async_timed_report():
     def decorator(func):
         @functools.wraps(func)
         async def wrapper(*args, **kwargs):
-            # Фиксируем время начала
-            start_time = time.perf_counter()
+            indent = indent_var.get()
+            indent_var.set(indent + 1) # Увеличиваем отступ для вложенных функций
             
+            start_time = time.perf_counter()
             try:
-                # Выполняем асинхронную функцию
                 return await func(*args, **kwargs)
             finally:
-                # Фиксируем время окончания даже если функция завершилась с ошибкой
                 end_time = time.perf_counter()
                 duration = end_time - start_time
-                
-                # Формируем строку отчета
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 report_line = (f"[{timestamp}] Функция: {func.__name__} | "
                                f"Время выполнения: {duration:.4f} сек.\n")
                 
-                # Записываем в файл (режим 'a' — дозапись)
-                with open(filename, "a", encoding="utf-8") as f:
+                with open(os.path.join(full_path_dir, "async_timed_report.txt"), "a", encoding="utf-8") as f:
                     f.write(report_line)
-                    
+                indent_var.set(indent) # Возвращаем уровень назад
         return wrapper
     return decorator
 
-
-def timed_report(filename="../reports/sync_timed_report.txt"):
-    """
-    Декоратор для замера времени выполнения синхронных функций.
-    Результаты записываются в файл.
-    """
+def sync_timed_report():
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            # Фиксируем время начала
-            start_time = time.perf_counter()
+            indent = indent_var.get()
+            indent_var.set(indent + 1) # Увеличиваем отступ для вложенных функций
             
+            start_time = time.perf_counter()
             try:
-                # Выполняем саму функцию
                 result = func(*args, **kwargs)
                 return result
             finally:
-                # Фиксируем время окончания даже при ошибке
                 end_time = time.perf_counter()
                 duration = end_time - start_time
-                
-                # Формируем строку отчета
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 report_line = (f"[{timestamp}] Функция: {func.__name__} | "
                                f"Время выполнения: {duration:.4f} сек.\n")
                 
-                # Записываем в файл (режим 'a' — дозапись)
-                with open(filename, "a", encoding="utf-8") as f:
+                with open(os.path.join(full_path_dir, "sync_timed_report.txt"), "a", encoding="utf-8") as f:
                     f.write(report_line)
-                    
+                indent_var.set(indent) # Возвращаем уровень назад
         return wrapper
     return decorator
+
+if __name__ == "__main__":
+    @sync_timed_report()
+    def heavy_computation():
+        print("Выполняю сложные расчеты...")
+        time.sleep(1.2)
+        return "Расчет окончен"
+
+    res = heavy_computation()
+    print(res)

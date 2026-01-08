@@ -203,3 +203,4 @@ Thumbs.db
 security_keys/
 logs/
 .test.env
+reports/

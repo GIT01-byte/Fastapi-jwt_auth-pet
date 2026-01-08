@@ -33,6 +33,7 @@ from exceptions.exceptions import (
 
 from core.settings import settings
 from utils.logging import logger
+from utils.time_decorator import async_timed_report, sync_timed_report
 
 # Роутеры для аутентификации и разработки
 auth = APIRouter()
@@ -42,6 +43,7 @@ dev_usage = APIRouter()
 
 # Вход пользователя с выдачей токенов
 @auth.post("/login/", response_model=TokenResponse)
+@async_timed_report()
 async def auth_login(
     response: Response, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
 ):
@@ -64,6 +66,7 @@ async def auth_login(
 
 # Регистрация нового пользователя
 @auth.post("/register/")
+@async_timed_report()
 async def auth_register_user(request: RegisterRequest):
     try:
         auth_service = AuthService()
@@ -96,6 +99,7 @@ async def auth_register_user(request: RegisterRequest):
 
 # Обновление JWT-токенов
 @auth.post("/tokens/refresh/", response_model=TokenResponse)
+@async_timed_report()
 async def auth_refresh_jwt(data: RefreshRequest, response: Response):
     try:
         auth_service = AuthService()
@@ -114,6 +118,7 @@ async def auth_refresh_jwt(data: RefreshRequest, response: Response):
 
 # Выход пользователя (разлогинивание)
 @auth.post("/logout/")
+@async_timed_report()
 async def auth_logout_user(
     response: Response,
     redis=Depends(get_redis_client),
@@ -142,6 +147,7 @@ async def auth_logout_user(
 
 # Получение информации о себе (авторизованном пользователе)
 @auth_usage.get("/me/")
+@async_timed_report()
 async def auth_user_check_self_info(
     current_user: dict = Depends(get_current_active_user),
 ):
