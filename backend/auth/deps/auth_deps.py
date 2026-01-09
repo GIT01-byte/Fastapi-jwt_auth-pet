@@ -82,7 +82,7 @@ def set_tokens_cookie(response: Response, access_token: str, refresh_token: str)
 
 
 @async_timed_report()
-async def get_current_user(
+async def get_current_user_from_token(
     token: str = Depends(oauth2_scheme),
     redis: Redis = Depends(get_redis_client),
 ) -> dict:
@@ -132,11 +132,11 @@ async def get_current_user(
 
 
 @async_timed_report()
-async def get_current_active_user(current_user: dict = Depends(get_current_user)):
+async def get_current_active_user(current_user: dict = Depends(get_current_user_from_token)):
     """
     Возвращает активного пользователя.
 
-    :param current_user: Пользователь из зависимости get_current_user
+    :param current_user: Пользователь из зависимости get_current_user_from_token
     :raises UserInactiveError: Если пользователь неактивен
     :return: Активный пользователь
     """

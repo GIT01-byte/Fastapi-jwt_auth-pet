@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, timezone
 from typing import NoReturn
 from fastapi import Response
 
+from core.settings import settings
 from core.db.repositories import UsersRepo, RefreshTokensRepo
 from core.models.users import RefreshToken, User
 from core.schemas.users import TokenResponse, UserRead
@@ -24,6 +25,7 @@ from exceptions.exceptions import (
     UserNotFoundError,
     RegistrationFailedError,
     ValidateAuthUserFailedError,
+    LogoutUserFailedError,
 )
 from utils.security import (
     check_password,
@@ -32,14 +34,12 @@ from utils.security import (
     hash_password,
     hash_token,
 )
+from utils.logging import logger
+from utils.time_decorator import time_all_methods, async_timed_report
 from deps.auth_deps import (
+    clear_cookie_with_tokens,
     set_tokens_cookie,
 )
-
-from core.settings import settings
-from utils.logging import logger
-import utils.time_decorator
-from utils.time_decorator import time_all_methods, sync_timed_report, async_timed_report
 
 
 @time_all_methods(async_timed_report())
@@ -359,6 +359,33 @@ class AuthService:
             raise RevokeTokenFailedError(
                 "Failed to revoke token due to internal error."
             ) from e
+
+    async def loggout_user_logic(self, response: Response, access_jti: str, user_id: int):
+        """_summary_
+
+        Args:
+            response (Response): _description_
+            user_dict (dict): _description_
+        """
+        try:
+            # 1. Получение клиента Redis
+            redis_conn = await get_redis_client()
+            if redis_conn:
+                logger.debug("Успешное подключение к Redis.")
+
+            # 2. Очищаем куки с токенами
+            clear_cookie_with_tokens(response)
+
+            # 3. Помещаем Access-токен в черный список Redis
+            ttl = settings.jwt.access_token_expire_minutes * 60
+            await redis_conn.setex(f"blacklist:access:{access_jti}", ttl, "1")
+
+            # 4. Инвалидация всех Refresh-токенов пользователя
+            await RefreshTokensRepo.invalidate_all_refresh_tokens(user_id)
+
+        except Exception as ex:
+            logger.error(f"Ошибка выхода пользователя: {ex}")
+            raise LogoutUserFailedError()
 
     async def refresh(self, response: Response, raw_token: str) -> TokenResponse:
         """

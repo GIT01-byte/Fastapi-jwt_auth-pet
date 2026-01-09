@@ -3,7 +3,7 @@ import pytest
 from httpx import AsyncClient, ASGITransport
 from contextlib import nullcontext as does_not_raise
 
-from backend.auth.utils.security import create_refresh_token, hash_token
+from backend.auth.utils.security import ACCESS_TOKEN_TYPE, REFRESH_TOKEN_TYPE, create_refresh_token, hash_token
 from backend.auth.core.schemas import JWTPayload
 from backend.auth.main import app
 
@@ -42,8 +42,8 @@ class TestApi:
         assert data["token_type"].lower() == "bearer"
         
         # Проверка кук 
-        assert "access" in response_login.cookies
-        assert "refresh" in response_login.cookies
+        assert ACCESS_TOKEN_TYPE in response_login.cookies
+        assert REFRESH_TOKEN_TYPE in response_login.cookies
         
         # 2. Проверка доступа к защищенному эндпоинту
         token = data["access_token"]
