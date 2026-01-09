@@ -303,9 +303,6 @@ class AuthService:
 
             if created_user_in_db:
                 new_username = created_user_in_db.username
-                logger.info(
-                    f"Пользователь {new_username!r} успешно зарегистрирован с ID: {created_user_in_db.id}."
-                )
                 return new_username
             else:
                 logger.error(

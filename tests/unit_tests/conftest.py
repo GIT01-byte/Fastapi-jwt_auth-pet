@@ -3,7 +3,7 @@ from httpx import ASGITransport, AsyncClient
 
 from backend.auth.main import app
 from backend.auth.core.db.repositories import UsersRepo
-from backend.auth.utils.security import hash_password
+from backend.auth.utils.security import ACCESS_TOKEN_TYPE, REFRESH_TOKEN_TYPE, hash_password
 
 # TODO добавить фикстутру для хэша пароля, генерации токенов и добаления юзера в БД
 # Фикстура асинхронного клиента
@@ -17,17 +17,17 @@ async def ac():
 @pytest.fixture(scope="session")
 async def user_register_payloads():
     user_register_payloads = [
-    {
-    "username": "test_user",
-    "email": "test_user@testemail.com",
-    "profile": {},
-    "password": "1234test"
-    },
-    {
-    "username": "test_user_1",
-    "email": "test_user_1@testemail.com",
-    "password": "5678test"
-    }
+        {
+            "username": "test_user",
+            "email": "test_user@testemail.com",
+            "profile": {},
+            "password": "1234test"
+        },
+        {
+            "username": "test_user_1",
+            "email": "test_user_1@testemail.com",
+            "password": "5678test"
+        }
     ]
     return user_register_payloads
 
@@ -41,6 +41,37 @@ async def add_test_users(user_register_payloads):
         db_data.pop("password")
         db_data["hashed_password"] = hashed_password
         await UsersRepo.create_user(db_data)
+
+
+# Фикстура для аунтеффикации пользователя
+@pytest.fixture
+async def auth_user(ac):
+    # 1. Вход юзера в систему
+    login_data = {"username": "test_user", "password": "1234test"} 
+    response_login = await ac.post("/login/", data=login_data)
+    
+    assert response_login.status_code == 200
+    data = response_login.json()
+    
+    # Проверка токенов в теле ответа
+    assert "access_token" in data
+    assert "refresh_token" in data
+    assert data["token_type"].lower() == "bearer"
+    
+    # Проверка кук 
+    assert ACCESS_TOKEN_TYPE in response_login.cookies
+    assert REFRESH_TOKEN_TYPE in response_login.cookies
+    
+    # 2. Проверка доступа к защищенному эндпоинту
+    token = data["access_token"]
+    headers = {'Authorization': f'Bearer {token}'}
+    response_info = await ac.get("/me/", headers=headers)
+    
+    assert response_info.status_code == 200
+    
+    # 3. Дополнительная проверка: убедимся, что вернулся именно тот юзер
+    info_data = response_info.json()
+    assert info_data["username"] == login_data["username"]
 
 
 # Фикстура генерации jwt токенов для тестового юзера

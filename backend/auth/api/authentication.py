@@ -103,7 +103,7 @@ async def auth_register_user(
             payload=payload, password=register_request.password
         )
 
-        return {"message": f"Регистрация пользователя {new_user!r} прошла успешно!"}
+        return {"message": f"Регистрация пользователя: {new_user!r} прошла успешно!"}
 
     # Обрабатываем уникальные ошибки регистрации
     except ValueError as e:
