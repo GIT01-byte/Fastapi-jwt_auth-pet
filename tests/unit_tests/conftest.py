@@ -72,7 +72,7 @@ async def auth_user(ac):
     # 3. Дополнительная проверка: убедимся, что вернулся именно тот юзер
     info_data = response_info.json()
     assert info_data["username"] == login_data["username"]
-
+    print("Вход тестового Авторизованного пользователя выполнен успешно!")
 
 # Фикстура генерации jwt токенов для тестового юзера
 # @pytest.fixture

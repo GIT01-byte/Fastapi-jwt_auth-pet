@@ -97,40 +97,39 @@ class TestApi:
         assert user_in_db.email == register_data['email']
 
 
-    # @pytest.mark.parametrize(
-    #     "register_data",
-    #     [
-    #         {
-    #             "username": "test_user_2",
-    #             "email": "test_user_2@testemail.com",
-    #             "profile": {},
-    #             "password": "1234test"
-    #         },
-    #         {
-    #             "username": "test_user_3",
-    #             "email": "test_user_3@testemail.com",
-    #             "password": "5678test"
-    #         }
-    #     ]
-    # )
-    # @pytest.mark.asyncio
-    # async def test_register_user_with_current_user(self, ac: AsyncClient, register_data: dict, auth_user):
-    #     # 1. Вход пользоваетеля для теста авто-выхода
-    #     user = auth_user
-    #     print(user)
+    @pytest.mark.parametrize(
+        "register_data",
+        [
+            {
+                "username": "test_user_2",
+                "email": "test_user_2@testemail.com",
+                "profile": {},
+                "password": "1234test"
+            },
+            {
+                "username": "test_user_3",
+                "email": "test_user_3@testemail.com",
+                "password": "5678test"
+            }
+        ]
+    )
+    @pytest.mark.asyncio
+    async def test_register_user_with_current_user(self, ac: AsyncClient, register_data: dict, auth_user):
+        # 1. Вход пользоваетеля для теста авто-выхода
+
         
-    #     # 2. Выполнение процедуры регистрации
-    #     response_register = await ac.post("/register/", json=register_data)
+        # 2. Выполнение процедуры регистрации
+        response_register = await ac.post("/register/", json=register_data)
         
-    #     assert response_register.status_code == 200
-    #     response_data = response_register.json()
+        assert response_register.status_code == 200
+        response_data = response_register.json()
         
-    #     # 3. Проверка выходных данных
-    #     assert register_data["username"] in response_data["message"]
+        # 3. Проверка выходных данных
+        assert register_data["username"] in response_data["message"]
         
-    #     # 4. Проверка пользователя в БД
-    #     user_in_db = await UsersRepo.select_user_by_username(register_data["username"])
+        # 4. Проверка пользователя в БД
+        user_in_db = await UsersRepo.select_user_by_username(register_data["username"])
         
-    #     assert user_in_db is not None, f"Пользователь {register_data['username']} не найден в БД"
-    #     assert user_in_db.username == register_data['username']
-    #     assert user_in_db.email == register_data['email']
+        assert user_in_db is not None, f"Пользователь {register_data['username']} не найден в БД"
+        assert user_in_db.username == register_data['username']
+        assert user_in_db.email == register_data['email']
